@@ -21,6 +21,17 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from werkzeug.utils import secure_filename
 from openpyxl import Workbook, load_workbook
 
+# Optional web scraping imports
+try:
+    import requests
+    from bs4 import BeautifulSoup
+    from urllib.robotparser import RobotFileParser
+    SCRAPING_AVAILABLE = True
+    print("Web scraping capabilities enabled")
+except ImportError:
+    SCRAPING_AVAILABLE = False
+    print("Web scraping dependencies not installed. Install with: pip install requests beautifulsoup4 lxml")
+
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 
@@ -247,18 +258,88 @@ class JobTracker:
             print(f"Error importing Excel file: {e}")
             return 0
 
+@app.route('/check_draft')
+def check_draft():
+    """Check for pending draft from clipboard monitoring."""
+    global pending_draft
+    
+    if pending_draft:
+        draft = pending_draft
+        pending_draft = None  # Clear the pending draft
+        return jsonify({'has_draft': True, 'draft': draft})
+    
+    return jsonify({'has_draft': False})
+
+# Save draft route should be before main execution
+@app.route('/save_draft', methods=['POST'])
+def save_draft():
+    """Save a draft application from clipboard monitoring."""
+    data = request.get_json()
+    
+    if data:
+        app_id = job_tracker.add_application(data)
+        if app_id:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'URL already exists'})
+    
+    return jsonify({'success': False, 'error': 'No data provided'})
+
+
+def clipboard_monitor():
+    """Monitor clipboard for job URLs and create draft entries."""
+    global last_clipboard_content, pending_draft, stop_clipboard_monitoring
+    
+    while not stop_clipboard_monitoring:
+        try:
+            current_content = pyperclip.paste()
+            
+            # Check if clipboard content changed and looks like a job URL
+            if (current_content != last_clipboard_content and 
+                current_content.startswith(('http://', 'https://')) and
+                is_job_url(current_content)):
+                
+                # Extract job info from URL
+                job_info = extract_job_info_from_url(current_content)
+                
+                # Create draft entry
+                draft = {
+                    'url': current_content,
+                    'platform': job_info['platform'],
+                    'company': job_info['company'],
+                    'job_id': job_info['job_id'],
+                    'role': job_info['role'],  # Now potentially filled by scraping
+                    'location': job_info['location'],  # Now potentially filled by scraping
+                    'salary': job_info['salary'],  # Now potentially filled by scraping
+                    'date_applied': datetime.now().strftime('%Y-%m-%d'),
+                    'status': 'Applied'
+                }
+                
+                pending_draft = draft
+                print(f"Draft created for: {current_content}")
+            
+            last_clipboard_content = current_content
+        except Exception as e:
+            print(f"Clipboard monitoring error: {e}")
+        
+        time.sleep(1)  # Check every second
+
+
 # Initialize job tracker
 job_tracker = JobTracker()
 
 def extract_job_info_from_url(url):
-    """Extract job information from URL patterns."""
+    """Extract job information from URL patterns and optionally web scraping."""
     parsed_url = urlparse(url)
     domain = parsed_url.netloc.lower()
     
     job_info = {
         'platform': '',
         'company': '',
-        'job_id': ''
+        'job_id': '',
+        'role': '',
+        'location': '',
+        'salary': ''
     }
     
     # LinkedIn
@@ -309,11 +390,154 @@ def extract_job_info_from_url(url):
     elif 'glassdoor.com' in domain:
         job_info['platform'] = 'Glassdoor'
     
+    # Company career pages
+    elif any(keyword in domain for keyword in ['careers', 'jobs']):
+        job_info['platform'] = 'Company Website'
+        # Try to extract company from domain
+        domain_parts = domain.replace('careers.', '').replace('jobs.', '').split('.')
+        if len(domain_parts) >= 2:
+            job_info['company'] = domain_parts[-2].title()
+    
     # Generic job boards
-    elif any(keyword in domain for keyword in ['jobs', 'career', 'hiring']):
+    elif any(keyword in domain for keyword in ['hiring', 'employment', 'position']):
         job_info['platform'] = 'Job Board'
     
+    # Attempt web scraping if available and appropriate
+    if SCRAPING_AVAILABLE and should_attempt_scraping(url):
+        try:
+            scraped_info = scrape_job_details(url)
+            # Merge scraped info, preferring existing URL-parsed data
+            for key, value in scraped_info.items():
+                if value and not job_info.get(key):
+                    job_info[key] = value
+        except Exception as e:
+            print(f"Scraping failed for {url}: {e}")
+    
     return job_info
+
+def should_attempt_scraping(url):
+    """Determine if we should attempt scraping for this URL."""
+    if not SCRAPING_AVAILABLE:
+        return False
+    
+    # Only scrape from sites likely to allow it
+    safe_patterns = [
+        r'.*careers\..*',
+        r'.*jobs\..*',
+        r'.*\.careers\..*',
+        # Add more patterns for sites you know allow scraping
+    ]
+    
+    return any(re.match(pattern, url, re.IGNORECASE) for pattern in safe_patterns)
+
+def scrape_job_details(url):
+    """Scrape job details from a URL using ethical practices."""
+    if not SCRAPING_AVAILABLE:
+        return {}
+    
+    try:
+        # Check robots.txt first
+        parsed_url = urlparse(url)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        robots_url = f"{base_url}/robots.txt"
+        
+        try:
+            from urllib.robotparser import RobotFileParser
+            rp = RobotFileParser()
+            rp.set_url(robots_url)
+            rp.read()
+            
+            if not rp.can_fetch('*', url):
+                print(f"Robots.txt disallows scraping {url}")
+                return {}
+        except:
+            # If robots.txt check fails, proceed cautiously
+            pass
+        
+        # Make request with respectful headers and timeout
+        headers = {
+            'User-Agent': 'Job-Tracker/1.0 (Educational Project)',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+        
+        # Add delay to be respectful
+        time.sleep(2)
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        scraped_info = {
+            'company': '',
+            'role': '',
+            'location': '',
+            'salary': ''
+        }
+        
+        # Try common selectors for job information
+        # Job title
+        title_selectors = [
+            'h1.job-title', 'h1[data-job-title]', '.job-title',
+            'h1.position-title', '.position-title', '.role-title',
+            'h1:first-of-type', 'title'
+        ]
+        
+        for selector in title_selectors:
+            element = soup.select_one(selector)
+            if element and element.get_text().strip():
+                title_text = element.get_text().strip()
+                # Clean up title
+                title_text = re.sub(r'^(Job:|Position:|Role:)\s*', '', title_text, flags=re.IGNORECASE)
+                title_text = re.sub(r'\s*-\s*.*$', '', title_text)
+                scraped_info['role'] = title_text
+                break
+
+        # Company name (if not already extracted from URL)
+        company_selectors = [
+            '.company-name', '.employer-name', '[data-company]',
+            '.company', '.employer'
+        ]
+        
+        for selector in company_selectors:
+            element = soup.select_one(selector)
+            if element and element.get_text().strip():
+                scraped_info['company'] = element.get_text().strip()
+                break
+        
+        # Location
+        location_selectors = [
+            '.job-location', '.location', '[data-location]',
+            '.job-location-text', '.position-location'
+        ]
+        
+        for selector in location_selectors:
+            element = soup.select_one(selector)
+            if element and element.get_text().strip():
+                scraped_info['location'] = element.get_text().strip()
+                break
+        
+        # Salary (if available)
+        salary_selectors = [
+            '.salary', '.compensation', '[data-salary]',
+            '.salary-range', '.pay-range'
+        ]
+        
+        for selector in salary_selectors:
+            element = soup.select_one(selector)
+            if element and element.get_text().strip():
+                scraped_info['salary'] = element.get_text().strip()
+                break
+        
+        print(f"Successfully scraped job info from {url}")
+        return scraped_info
+        
+    except Exception as e:
+        print(f"Error scraping {url}: {e}")
+        return {}
 
 def is_job_url(url):
     """Check if URL looks like a job posting."""
@@ -330,42 +554,6 @@ def is_job_url(url):
     
     url_lower = url.lower()
     return any(keyword in url_lower for keyword in job_keywords)
-
-def clipboard_monitor():
-    """Monitor clipboard for job URLs and create draft entries."""
-    global last_clipboard_content, pending_draft, stop_clipboard_monitoring
-    
-    while not stop_clipboard_monitoring:
-        try:
-            current_content = pyperclip.paste()
-            
-            # Check if clipboard content changed and looks like a job URL
-            if (current_content != last_clipboard_content and 
-                current_content.startswith(('http://', 'https://')) and
-                is_job_url(current_content)):
-                
-                # Extract job info from URL
-                job_info = extract_job_info_from_url(current_content)
-                
-                # Create draft entry
-                draft = {
-                    'url': current_content,
-                    'platform': job_info['platform'],
-                    'company': job_info['company'],
-                    'job_id': job_info['job_id'],
-                    'role': '',
-                    'date_applied': datetime.now().strftime('%Y-%m-%d'),
-                    'status': 'Applied'
-                }
-                
-                pending_draft = draft
-                print(f"Draft created for: {current_content}")
-            
-            last_clipboard_content = current_content
-        except Exception as e:
-            print(f"Clipboard monitoring error: {e}")
-        
-        time.sleep(1)  # Check every second
 
 # Flask Routes
 
@@ -635,7 +823,7 @@ def import_excel():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            
+
             imported_count = job_tracker.import_from_excel(filepath)
             
             # Clean up uploaded file
@@ -652,32 +840,8 @@ def import_excel():
     
     return render_template('import.html')
 
-@app.route('/check_draft')
-def check_draft():
-    """Check for pending draft from clipboard monitoring."""
-    global pending_draft
-    
-    if pending_draft:
-        draft = pending_draft
-        pending_draft = None  # Clear the pending draft
-        return jsonify({'has_draft': True, 'draft': draft})
-    
-    return jsonify({'has_draft': False})
 
-@app.route('/save_draft', methods=['POST'])
-def save_draft():
-    """Save a draft application from clipboard monitoring."""
-    data = request.get_json()
-    
-    if data:
-        app_id = job_tracker.add_application(data)
-        if app_id:
-            return jsonify({'success': True})
-        else:
-            return jsonify({'success': False, 'error': 'URL already exists'})
-    
-    return jsonify({'success': False, 'error': 'No data provided'})
-
+# Move the main execution block here, at the very end
 if __name__ == '__main__':
     # Start clipboard monitoring in background thread
     clipboard_thread = threading.Thread(target=clipboard_monitor, daemon=True)
@@ -686,17 +850,17 @@ if __name__ == '__main__':
     # Open browser automatically
     def open_browser():
         time.sleep(1)  # Wait for server to start
-        webbrowser.open('http://127.0.0.1:5000')
+        webbrowser.open('http://127.0.0.1:5001')
     
     browser_thread = threading.Thread(target=open_browser, daemon=True)
     browser_thread.start()
     
     print("🚀 Job Tracker starting...")
     print("📋 Clipboard monitoring active - copy job URLs to auto-create drafts!")
-    print("🌐 Opening browser at http://127.0.0.1:5000")
+    print("🌐 Opening browser at http://127.0.0.1:5001")
     
     try:
-        app.run(debug=True, use_reloader=False, host='127.0.0.1', port=5000)
+        app.run(debug=True, use_reloader=False, host='127.0.0.1', port=5001)
     except KeyboardInterrupt:
         print("\n👋 Shutting down Job Tracker...")
         stop_clipboard_monitoring = True

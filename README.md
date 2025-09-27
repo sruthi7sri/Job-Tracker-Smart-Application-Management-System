@@ -14,7 +14,8 @@ A privacy-focused job application tracking system that automates data entry and 
 ### Intelligent Automation
 - **Clipboard Monitoring** - Auto-creates application drafts when you copy job URLs
 - **Platform Recognition** - Supports LinkedIn, Greenhouse, Lever, Workday, Indeed, AngelList, and more
-- **Data Extraction** - Automatically extracts company names, job IDs, and platform information from URLs
+- **Smart Data Extraction** - Automatically extracts company names, job IDs, and platform information from URLs
+- **Web Scraping** - Enhanced data extraction including job titles, locations, and salary information (when available)
 - **Draft Review System** - Review and edit auto-generated entries before saving
 
 ### Advanced Analytics
@@ -35,20 +36,23 @@ A privacy-focused job application tracking system that automates data entry and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/job-tracker.git
-cd job-tracker
+git clone https://github.com/sruthi7sri/Job-Tracker-Smart-Application-Management-System.git
+cd Job-Tracker-Smart-Application-Management-System
 
 # Install dependencies
-pip install Flask pyperclip openpyxl
+pip install -r requirements.txt
 
-# Create required directories
-mkdir data uploads
+# Optional: Install web scraping dependencies for enhanced data extraction
+pip install requests beautifulsoup4 lxml
+
+# Create required directories (if not already present)
+mkdir -p data uploads
 
 # Run the application
 python app.py
 ```
 
-Open your browser to `http://127.0.0.1:5000`
+Open your browser to `http://127.0.0.1:5001`
 
 ## How It Works
 
@@ -62,8 +66,10 @@ https://jobs.lever.co/company/position-name
 
 ### 2. Smart Data Extraction
 The system automatically extracts:
-- **Company name** (from URL patterns)
+- **Company name** (from URL patterns and web scraping)
 - **Job ID** (from URL parameters) 
+- **Job title** (via intelligent web scraping when available)
+- **Location** (from job postings when accessible)
 - **Platform** (LinkedIn, Greenhouse, etc.)
 - **Application date** (today's date)
 
@@ -210,11 +216,17 @@ chmod +x start.sh
 - **Browser:** Any modern web browser
 - **OS:** Windows, macOS, Linux
 
+### Dependencies
+- **Core:** Flask, pyperclip, openpyxl
+- **Optional (Web Scraping):** requests, beautifulsoup4, lxml
+
 ### Platform-Specific Notes
 
 **macOS:**
 - May require clipboard access permissions
+- **Port 5000 conflict:** AirPlay Receiver uses port 5000 - app uses 5001 by default
 - Use `python3` command
+- Grant permissions when prompted for clipboard and web access
 
 **Windows:**  
 - Security warnings for clipboard access are normal
@@ -232,16 +244,30 @@ chmod +x start.sh
 pip install -r requirements.txt
 ```
 
-**Port 5000 in use:**
+**Port 5001 in use (or macOS AirPlay conflict):**
+
+On **macOS**, port 5000 is used by AirPlay Receiver. The app now uses port 5001 by default.
+
+If port 5001 is also in use:
 ```bash
-# Change port in app.py or kill existing process
-lsof -ti:5000 | xargs kill -9
+# Kill processes using port 5001
+lsof -ti:5001 | xargs kill -9
 ```
+
+To disable AirPlay Receiver (frees up port 5000):
+1. **System Settings** → **General** → **AirDrop & Handoff**
+2. Turn off **AirPlay Receiver**
 
 **Clipboard monitoring not working:**
 - Grant clipboard permissions when prompted
 - On Linux, install xsel or xclip
 - Restart application after permission changes
+
+**Web scraping not working:**
+- Web scraping is optional and respects robots.txt
+- Some sites block automated requests - this is normal
+- Job URLs still work for platform detection and manual entry
+- Check console for "Web scraping capabilities enabled" message
 
 **Database errors:**
 ```bash

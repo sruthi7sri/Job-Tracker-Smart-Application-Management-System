@@ -10,3 +10,7 @@ MarkupSafe==2.1.3
 itsdangerous==2.1.2
 click==8.1.7
 blinker==1.7.0
+# Web scraping dependencies (optional)
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
