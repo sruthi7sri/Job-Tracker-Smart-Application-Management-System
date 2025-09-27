@@ -134,15 +134,20 @@ Use the dashboard to:
 
 ## Supported Platforms
 
-| Platform | Company Extraction | Job ID Extraction | Notes |
-|----------|-------------------|-------------------|--------|
-| LinkedIn | ❌ | ✅ | Manual company entry required |
-| Greenhouse | ✅ | ✅ | From subdomain pattern |
-| Lever | ✅ | ❌ | From URL path |
-| Workday | ✅ | ❌ | From URL path |
-| Indeed | ❌ | ❌ | Platform detection only |
-| AngelList | ❌ | ❌ | Platform detection only |
-| Company Sites | ❌ | ❌ | Platform detection only |
+| Platform           | Company Extraction | Job ID Extraction | Notes                       |
+|--------------------|--------------------|--------------------|-----------------------------|
+| LinkedIn           | ✅                 | ✅                 | Most comprehensive data     |
+| Greenhouse         | ✅                 | ✅                 | ATS integration             |
+| Lever              | ✅                 | ✅                 | Modern ATS                  |
+| Workday            | ✅                 | ✅                 | Enterprise ATS              |
+| Indeed             | ✅                 | ✅                 | Global job board            |
+| AngelList/Wellfound| ✅                 | ✅                 | Startup focused             |
+| Glassdoor          | ✅                 | ✅                 | With salary data            |
+| Monster            | ✅                 | ✅                 | Traditional job board       |
+| ZipRecruiter       | ✅                 | ✅                 | AI-powered matching         |
+| CareerBuilder      | ✅                 | ✅                 | Professional network        |
+| Company Sites      | ❌                 | ❌                 | Platform detection only     |
+
 
 ## Screenshots
 
