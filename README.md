@@ -34,25 +34,74 @@ A privacy-focused job application tracking system that automates data entry and 
 
 ## Quick Start
 
+Ready to get started? Here's the fastest way:
+
+1. **Activate the included virtual environment:**
+   ```bash
+   source job-tracker-env/bin/activate  # Mac/Linux
+   job-tracker-env\Scripts\activate     # Windows
+   ```
+
+2. **Run the application:**
+   ```bash
+   python app.py
+   ```
+
+3. **Open your browser:**
+   ```
+   http://localhost:5001
+   ```
+
+That's it! The virtual environment already has all dependencies installed.
+
+## Installation & Setup
+
+### Python Environment Setup
+
+Since Python 3.13+ requires isolated package environments, this repository includes a pre-configured virtual environment with all dependencies installed.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sruthi7sri/Job-Tracker-Smart-Application-Management-System.git
+   cd Job-Tracker-Smart-Application-Management-System
+   ```
+
+2. **Activate the included virtual environment:**
+   ```bash
+   source job-tracker-env/bin/activate  # On Mac/Linux
+   # or
+   job-tracker-env\Scripts\activate     # On Windows
+   ```
+
+3. **Run the application:**
+   ```bash
+   python app.py
+   ```
+
+4. **Open your browser and navigate to:**
+   ```
+   http://localhost:5001
+   ```
+
+### Alternative Setup (if virtual environment has issues)
+
+If you need to create a fresh virtual environment:
+
 ```bash
-# Clone the repository
-git clone https://github.com/sruthi7sri/Job-Tracker-Smart-Application-Management-System.git
-cd Job-Tracker-Smart-Application-Management-System
+# Create new virtual environment
+python3 -m venv job-tracker-env
+
+# Activate it
+source job-tracker-env/bin/activate  # Mac/Linux
+# or
+job-tracker-env\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Optional: Install web scraping dependencies for enhanced data extraction
-pip install requests beautifulsoup4 lxml
-
-# Create required directories (if not already present)
-mkdir -p data uploads
-
-# Run the application
+# Run the app
 python app.py
 ```
-
-Open your browser to `http://127.0.0.1:5001`
 
 ## How It Works
 
@@ -97,13 +146,27 @@ Use the dashboard to:
 
 ## Screenshots
 
-### Dashboard
-![Dashboard showing application list with status updates and statistics]
+### Dashboard - Real-time Application Tracking
+![Dashboard showing application list with status updates and statistics](images/Dashboard.jpeg)
 
-### Analytics
-![Sankey diagram showing job application flow from applications to offers]
+*Track all your applications in one place with real-time status updates, filtering, and comprehensive statistics*
 
-### Add Application
+### Analytics - Sankey Flow Visualization  
+![Sankey diagram showing job application flow from applications to offers](images/SankeyDiagram.jpeg)
+
+*Visualize your job search funnel with interactive Sankey diagrams and detailed analytics*
+
+### Add Application - Smart Form
+![Add application form with auto-populated fields](images/NewApplication.jpeg)
+
+*Add new applications with smart form validation and status tracking*
+
+### Clipboard Monitoring - Automatic Draft Creation
+![Clipboard monitoring creating draft from job URLs](images/clipboard.jpeg)
+
+*Automatic draft creation when you copy job URLs - just review and save!*
+
+## Add Application
 ![Form with auto-filled fields from clipboard monitoring]
 
 *Screenshots coming soon - add actual images to showcase the interface*
@@ -220,20 +283,27 @@ chmod +x start.sh
 - **Core:** Flask, pyperclip, openpyxl
 - **Optional (Web Scraping):** requests, beautifulsoup4, lxml
 
+**Installation Note:** For Python 3.8+, using a virtual environment is recommended due to PEP 668 (externally-managed-environment policy).
+
+### Platform-Specific Notes
+
 ### Platform-Specific Notes
 
 **macOS:**
-- May require clipboard access permissions
+- **Virtual environment recommended:** `python3 -m venv job-tracker-env && source job-tracker-env/bin/activate`
 - **Port 5000 conflict:** AirPlay Receiver uses port 5000 - app uses 5001 by default
-- Use `python3` command
-- Grant permissions when prompted for clipboard and web access
+- **Permissions:** Grant clipboard and web access permissions when prompted
+- **Run with:** `python app.py` (after activating virtual environment)
 
 **Windows:**  
-- Security warnings for clipboard access are normal
-- Use `python` command
+- **Virtual environment:** `python -m venv job-tracker-env && job-tracker-env\Scripts\activate`
+- **Security:** Security warnings for clipboard access are normal
+- **Run with:** `python app.py`
 
 **Linux:**
-- Install clipboard utilities: `sudo apt-get install xsel xclip`
+- **Dependencies:** `sudo apt-get install xsel xclip` for clipboard support
+- **Virtual environment:** `python3 -m venv job-tracker-env && source job-tracker-env/bin/activate`  
+- **Run with:** `python3 app.py`
 
 ## Troubleshooting
 
@@ -241,12 +311,24 @@ chmod +x start.sh
 
 **"Module not found" error:**
 ```bash
+# Create virtual environment and install dependencies
+python3 -m venv job-tracker-env
+source job-tracker-env/bin/activate
 pip install -r requirements.txt
+```
+
+**Python 3.8+ "externally-managed-environment" error:**
+```bash
+# Use virtual environment (recommended approach)
+python3 -m venv job-tracker-env
+source job-tracker-env/bin/activate  # On Windows: job-tracker-env\Scripts\activate
+pip install -r requirements.txt
+python app.py
 ```
 
 **Port 5001 in use (or macOS AirPlay conflict):**
 
-On **macOS**, port 5000 is used by AirPlay Receiver. The app now uses port 5001 by default.
+On **macOS**, port 5000 is used by AirPlay Receiver. The app uses port 5001 by default.
 
 If port 5001 is also in use:
 ```bash
@@ -260,7 +342,7 @@ To disable AirPlay Receiver (frees up port 5000):
 
 **Clipboard monitoring not working:**
 - Grant clipboard permissions when prompted
-- On Linux, install xsel or xclip
+- On Linux, install xsel or xclip: `sudo apt-get install xsel xclip`
 - Restart application after permission changes
 
 **Web scraping not working:**
@@ -271,11 +353,10 @@ To disable AirPlay Receiver (frees up port 5000):
 
 **Database errors:**
 ```bash
-# Check permissions
+# Check permissions and recreate database if needed
 ls -la data/
-# Recreate database
-rm data/jobtracker.sqlite3
-python app.py
+rm -f data/jobtracker.sqlite3  # Remove corrupted database
+python app.py  # Will recreate database automatically
 ```
 
 ## Contributing
