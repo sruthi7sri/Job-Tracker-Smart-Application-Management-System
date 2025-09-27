@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="bi bi-graph-up me-2"></i>Job Search Analytics
+    </h1>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body">
+                <h3 class="mb-1">{{ stats.total }}</h3>
+                <small>Total Applications</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <div class="card-body">
+                <h3 class="mb-1">{{ stats.response_rate }}%</h3>
+                <small>Response Rate</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div class="card-body">
+                <h3 class="mb-1">{{ stats.interview_rate }}%</h3>
+                <small>Interview Rate</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+            <div class="card-body">
+                <h3 class="mb-1">{{ stats.success_rate }}%</h3>
+                <small>Offer Rate</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sankey Diagram -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-diagram-3 me-2"></i>Job Application Flow
+        </h5>
+        <small class="text-muted">Visual representation of your job search funnel</small>
+    </div>
+    <div class="card-body">
+        <div id="sankeyChart" style="height: 500px;"></div>
+    </div>
+</div>
+
+<!-- Detailed Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>Status Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="statusChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>Platform Performance
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="platformChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Timeline -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>Application Timeline
+        </h6>
+    </div>
+    <div class="card-body">
+        <div id="timelineChart" style="height: 300px;"></div>
+    </div>
+</div>
+
+<!-- Insights & Recommendations -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>Smart Insights
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="insights-container">
+                    {% if insights %}
+                        {% for insight in insights %}
+                            <div class="alert alert-{{ insight.type }} alert-dismissible fade show">
+                                <i class="bi bi-{{ insight.icon }} me-2"></i>
+                                <strong>{{ insight.title }}</strong><br>
+                                {{ insight.message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Add more applications to see personalized insights and recommendations.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>Follow-ups Due
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if follow_ups %}
+                    {% for app in follow_ups %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>{{ app.company }}</strong><br>
+                                <small class="text-muted">{{ app.role }}</small>
+                            </div>
+                            <span class="badge bg-warning">{{ app.follow_up_on }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small">No follow-ups scheduled</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Plotly.js for visualizations -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sankey Diagram Data
+    const sankeyData = {
+        type: "sankey",
+        orientation: "h",
+        arrangement: "snap",
+        node: {
+            pad: 15,
+            thickness: 30,
+            line: {
+                color: "black",
+                width: 0.5
+            },
+            label: [
+                "Applications",
+                "No Response", 
+                "Rejected",
+                "Interviews",
+                "No Offer",
+                "Offers",
+                "Declined",
+                "Accepted"
+            ],
+            color: [
+                "#667eea", // Applications (purple)
+                "#ffb3ba", // No Response (light red)
+                "#ff9999", // Rejected (red)
+                "#ffcc99", // Interviews (orange)
+                "#ffb3ba", // No Offer (light red)
+                "#b3ffb3", // Offers (light green)
+                "#ffffba", // Declined (yellow)
+                "#b3ffcc"  // Accepted (green)
+            ]
+        },
+        link: {
+            source: [0, 0, 0, 3, 3, 5, 5],
+            target: [1, 2, 3, 4, 5, 6, 7],
+            value: [
+                {{ flow_data.no_response }},
+                {{ flow_data.rejected_early }},
+                {{ flow_data.interviews }},
+                {{ flow_data.no_offer }},
+                {{ flow_data.offers }},
+                {{ flow_data.declined }},
+                {{ flow_data.accepted }}
+            ],
+            color: [
+                "rgba(255, 179, 186, 0.6)", // No Response
+                "rgba(255, 153, 153, 0.6)", // Rejected
+                "rgba(255, 204, 153, 0.6)", // Interviews
+                "rgba(255, 179, 186, 0.6)", // No Offer
+                "rgba(179, 255, 179, 0.6)", // Offers
+                "rgba(255, 255, 186, 0.6)", // Declined
+                "rgba(179, 255, 204, 0.6)"  // Accepted
+            ]
+        }
+    };
+
+    const sankeyLayout = {
+        title: {
+            text: "Job Application Funnel",
+            font: { size: 16 }
+        },
+        font: { size: 10 },
+        margin: { l: 10, r: 10, t: 40, b: 10 }
+    };
+
+    Plotly.newPlot('sankeyChart', [sankeyData], sankeyLayout, {responsive: true});
+
+    // Status Distribution Pie Chart
+    const statusData = [{
+        values: [{{ stats.applied }}, {{ stats.interview }}, {{ stats.offer }}, {{ stats.rejected }}, {{ stats.no_response }}],
+        labels: ['Applied', 'Interview', 'Offers', 'Rejected', 'No Response'],
+        type: 'pie',
+        marker: {
+            colors: ['#4facfe', '#ffcc99', '#b3ffb3', '#ff9999', '#ffb3ba']
+        }
+    }];
+
+    const statusLayout = {
+        showlegend: true,
+        margin: { l: 20, r: 20, t: 20, b: 20 }
+    };
+
+    Plotly.newPlot('statusChart', statusData, statusLayout, {responsive: true});
+
+    // Platform Performance Chart
+    const platformData = [{
+        x: {{ platform_names | tojson }},
+        y: {{ platform_counts | tojson }},
+        type: 'bar',
+        marker: {
+            color: '#667eea',
+            opacity: 0.8
+        }
+    }];
+
+    const platformLayout = {
+        xaxis: { title: 'Platform' },
+        yaxis: { title: 'Applications' },
+        margin: { l: 40, r: 20, t: 20, b: 60 }
+    };
+
+    Plotly.newPlot('platformChart', platformData, platformLayout, {responsive: true});
+
+    // Timeline Chart
+    const timelineData = [{
+        x: {{ timeline_dates | tojson }},
+        y: {{ timeline_counts | tojson }},
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#4facfe', width: 3 },
+        marker: { size: 8, color: '#667eea' }
+    }];
+
+    const timelineLayout = {
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Applications Submitted' },
+        margin: { l: 40, r: 20, t: 20, b: 40 }
+    };
+
+    Plotly.newPlot('timelineChart', timelineData, timelineLayout, {responsive: true});
+});
+</script>
+{% endblock %}

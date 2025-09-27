@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Add Application - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="bi bi-plus-circle me-2"></i>Add New Application
+    </h1>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-form me-2"></i>Application Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="applicationForm">
+                    <!-- Company and Role -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="company" class="form-label">
+                                Company <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="company" name="company" required 
+                                   placeholder="e.g., Google, Microsoft, Startup Inc.">
+                            <div class="form-text">The company you're applying to</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">
+                                Role <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="role" name="role" required 
+                                   placeholder="e.g., Software Engineer, Product Manager">
+                            <div class="form-text">The position title</div>
+                        </div>
+                    </div>
+
+                    <!-- URL and Platform -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="url" class="form-label">Job URL</label>
+                            <input type="url" class="form-control" id="url" name="url" 
+                                   placeholder="https://...">
+                            <div class="form-text">Link to the job posting</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="platform" class="form-label">Platform</label>
+                            <select class="form-select" id="platform" name="platform">
+                                <option value="">Select Platform</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Greenhouse">Greenhouse</option>
+                                <option value="Lever">Lever</option>
+                                <option value="Workday">Workday</option>
+                                <option value="Indeed">Indeed</option>
+                                <option value="AngelList">AngelList</option>
+                                <option value="Glassdoor">Glassdoor</option>
+                                <option value="Company Website">Company Website</option>
+                                <option value="Job Board">Other Job Board</option>
+                                <option value="Referral">Referral</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Job ID and Date -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="job_id" class="form-label">Job ID</label>
+                            <input type="text" class="form-control" id="job_id" name="job_id" 
+                                   placeholder="e.g., REQ-12345">
+                            <div class="form-text">Internal job reference number</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="date_applied" class="form-label">Date Applied</label>
+                            <input type="date" class="form-control" id="date_applied" name="date_applied" 
+                                   value="{{ today }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Applied" selected>Applied</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Interview Scheduled">Interview Scheduled</option>
+                                <option value="Interview Completed">Interview Completed</option>
+                                <option value="Technical Round">Technical Round</option>
+                                <option value="Final Round">Final Round</option>
+                                <option value="Offer">Offer</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Withdrawn">Withdrawn</option>
+                                <option value="No Response">No Response</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Location and Salary -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   placeholder="e.g., San Francisco, CA / Remote">
+                            <div class="form-text">Job location or work arrangement</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="salary" class="form-label">Salary Range</label>
+                            <input type="text" class="form-control" id="salary" name="salary" 
+                                   placeholder="e.g., $100k - $150k, Competitive">
+                            <div class="form-text">Expected or posted salary range</div>
+                        </div>
+                    </div>
+
+                    <!-- Next Action and Follow Up -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="next_action" class="form-label">Next Action</label>
+                            <input type="text" class="form-control" id="next_action" name="next_action" 
+                                   placeholder="e.g., Wait for response, Prepare for interview">
+                            <div class="form-text">What you need to do next</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="follow_up_on" class="form-label">Follow Up Date</label>
+                            <input type="date" class="form-control" id="follow_up_on" name="follow_up_on">
+                            <div class="form-text">When to follow up if no response</div>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="tags" name="tags" 
+                               placeholder="e.g., frontend, startup, remote-friendly">
+                        <div class="form-text">Comma-separated tags for organizing applications</div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                  placeholder="Additional notes about the application, company, or role..."></textarea>
+                        <div class="form-text">Any additional information or reminders</div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Save Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Clipboard Monitoring:</strong> Copy a job URL from LinkedIn, Greenhouse, or other platforms and we'll auto-fill many fields for you!</li>
+                    <li><strong>Follow-up Dates:</strong> Set reminder dates to follow up on applications that haven't received responses.</li>
+                    <li><strong>Tags:</strong> Use tags like "remote", "startup", "big-tech" to organize and filter your applications.</li>
+                    <li><strong>Status Updates:</strong> Keep your status current to track your application pipeline effectively.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('date_applied');
+        if (!dateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+        
+        // Auto-detect platform from URL
+        const urlInput = document.getElementById('url');
+        const platformSelect = document.getElementById('platform');
+        
+        urlInput.addEventListener('blur', function() {
+            const url = this.value.toLowerCase();
+            if (url.includes('linkedin.com')) {
+                platformSelect.value = 'LinkedIn';
+            } else if (url.includes('greenhouse.io')) {
+                platformSelect.value = 'Greenhouse';
+            } else if (url.includes('lever.co')) {
+                platformSelect.value = 'Lever';
+            } else if (url.includes('workday.com') || url.includes('myworkdayjobs.com')) {
+                platformSelect.value = 'Workday';
+            } else if (url.includes('indeed.com')) {
+                platformSelect.value = 'Indeed';
+            } else if (url.includes('angel.co') || url.includes('wellfound.com')) {
+                platformSelect.value = 'AngelList';
+            } else if (url.includes('glassdoor.com')) {
+                platformSelect.value = 'Glassdoor';
+            }
+        });
+        
+        // Set default follow-up date (1 week from application date)
+        const dateAppliedInput = document.getElementById('date_applied');
+        const followUpInput = document.getElementById('follow_up_on');
+        
+        dateAppliedInput.addEventListener('change', function() {
+            if (this.value && !followUpInput.value) {
+                const appliedDate = new Date(this.value);
+                const followUpDate = new Date(appliedDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // Add 7 days
+                followUpInput.value = followUpDate.toISOString().split('T')[0];
+            }
+        });
+        
+        // Form validation
+        const form = document.getElementById('applicationForm');
+        form.addEventListener('submit', function(e) {
+            const company = document.getElementById('company').value.trim();
+            const role = document.getElementById('role').value.trim();
+            
+            if (!company || !role) {
+                e.preventDefault();
+                alert('Please fill in both Company and Role fields.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

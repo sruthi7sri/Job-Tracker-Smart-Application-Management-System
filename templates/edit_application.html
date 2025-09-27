@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Application - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="bi bi-pencil me-2"></i>Edit Application
+    </h1>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-form me-2"></i>Update Application Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="applicationForm">
+                    <!-- Company and Role -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="company" class="form-label">
+                                Company <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="company" name="company" 
+                                   value="{{ application.company }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">
+                                Role <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="role" name="role" 
+                                   value="{{ application.role }}" required>
+                        </div>
+                    </div>
+
+                    <!-- URL and Platform -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="url" class="form-label">Job URL</label>
+                            <input type="url" class="form-control" id="url" name="url" 
+                                   value="{{ application.url or '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="platform" class="form-label">Platform</label>
+                            <select class="form-select" id="platform" name="platform">
+                                <option value="">Select Platform</option>
+                                <option value="LinkedIn" {% if application.platform == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
+                                <option value="Greenhouse" {% if application.platform == 'Greenhouse' %}selected{% endif %}>Greenhouse</option>
+                                <option value="Lever" {% if application.platform == 'Lever' %}selected{% endif %}>Lever</option>
+                                <option value="Workday" {% if application.platform == 'Workday' %}selected{% endif %}>Workday</option>
+                                <option value="Indeed" {% if application.platform == 'Indeed' %}selected{% endif %}>Indeed</option>
+                                <option value="AngelList" {% if application.platform == 'AngelList' %}selected{% endif %}>AngelList</option>
+                                <option value="Glassdoor" {% if application.platform == 'Glassdoor' %}selected{% endif %}>Glassdoor</option>
+                                <option value="Company Website" {% if application.platform == 'Company Website' %}selected{% endif %}>Company Website</option>
+                                <option value="Job Board" {% if application.platform == 'Job Board' %}selected{% endif %}>Other Job Board</option>
+                                <option value="Referral" {% if application.platform == 'Referral' %}selected{% endif %}>Referral</option>
+                                <option value="Other" {% if application.platform == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Job ID and Date -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="job_id" class="form-label">Job ID</label>
+                            <input type="text" class="form-control" id="job_id" name="job_id" 
+                                   value="{{ application.job_id or '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="date_applied" class="form-label">Date Applied</label>
+                            <input type="date" class="form-control" id="date_applied" name="date_applied" 
+                                   value="{{ application.date_applied }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Applied" {% if application.status == 'Applied' %}selected{% endif %}>Applied</option>
+                                <option value="In Progress" {% if application.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Interview Scheduled" {% if application.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                                <option value="Interview Completed" {% if application.status == 'Interview Completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="Technical Round" {% if application.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
+                                <option value="Final Round" {% if application.status == 'Final Round' %}selected{% endif %}>Final Round</option>
+                                <option value="Offer" {% if application.status == 'Offer' %}selected{% endif %}>Offer</option>
+                                <option value="Accepted" {% if application.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="Withdrawn" {% if application.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                <option value="No Response" {% if application.status == 'No Response' %}selected{% endif %}>No Response</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Location and Salary -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   value="{{ application.location or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="salary" class="form-label">Salary Range</label>
+                            <input type="text" class="form-control" id="salary" name="salary" 
+                                   value="{{ application.salary or '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Next Action and Follow Up -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="next_action" class="form-label">Next Action</label>
+                            <input type="text" class="form-control" id="next_action" name="next_action" 
+                                   value="{{ application.next_action or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="follow_up_on" class="form-label">Follow Up Date</label>
+                            <input type="date" class="form-control" id="follow_up_on" name="follow_up_on" 
+                                   value="{{ application.follow_up_on or '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="tags" name="tags" 
+                               value="{{ application.tags or '' }}">
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4">{{ application.notes or '' }}</textarea>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Update Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Application History Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Application History
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Created:</small><br>
+                        <span>{{ application.created_at }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Last Updated:</small><br>
+                        <span>{{ application.updated_at }}</span>
+                    </div>
+                </div>
+                
+                {% if application.url %}
+                <hr>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-link-45deg me-2"></i>
+                    <a href="{{ application.url }}" target="_blank" class="text-decoration-none">
+                        View Original Job Posting
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('applicationForm');
+        form.addEventListener('submit', function(e) {
+            const company = document.getElementById('company').value.trim();
+            const role = document.getElementById('role').value.trim();
+            
+            if (!company || !role) {
+                e.preventDefault();
+                alert('Please fill in both Company and Role fields.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

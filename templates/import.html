@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Import Applications - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="bi bi-upload me-2"></i>Import Applications
+    </h1>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Upload Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Upload Excel File
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="importForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">
+                            Choose Excel File (.xlsx or .xls)
+                        </label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".xlsx,.xls" required>
+                        <div class="form-text">
+                            Select an Excel file containing your job application data.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-1"></i>Import Notes
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Duplicate applications (same URL) will be automatically skipped</li>
+                            <li>Your original Excel file will remain untouched</li>
+                            <li>Missing fields will be filled with default values</li>
+                            <li>The import process is safe and reversible</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="importBtn">
+                            <i class="bi bi-upload me-1"></i>Import Applications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Expected Format -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-table me-2"></i>Expected Excel Format
+                </h6>
+            </div>
+            <div class="card-body">
+                <p>Your Excel file should have the following column headers (case-insensitive):</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Column Name</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>company</code></td>
+                                <td><span class="badge bg-danger">Required</span></td>
+                                <td>Company name</td>
+                                <td>Google</td>
+                            </tr>
+                            <tr>
+                                <td><code>role</code></td>
+                                <td><span class="badge bg-danger">Required</span></td>
+                                <td>Job title</td>
+                                <td>Software Engineer</td>
+                            </tr>
+                            <tr>
+                                <td><code>job_id</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Internal job reference</td>
+                                <td>REQ-12345</td>
+                            </tr>
+                            <tr>
+                                <td><code>date_applied</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Application date</td>
+                                <td>2024-01-15</td>
+                            </tr>
+                            <tr>
+                                <td><code>status</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Application status</td>
+                                <td>Interview</td>
+                            </tr>
+                            <tr>
+                                <td><code>url</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Job posting URL</td>
+                                <td>https://linkedin.com/jobs/...</td>
+                            </tr>
+                            <tr>
+                                <td><code>platform</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Where you applied</td>
+                                <td>LinkedIn</td>
+                            </tr>
+                            <tr>
+                                <td><code>location</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Job location</td>
+                                <td>San Francisco, CA</td>
+                            </tr>
+                            <tr>
+                                <td><code>salary</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Salary range</td>
+                                <td>$120k - $150k</td>
+                            </tr>
+                            <tr>
+                                <td><code>notes</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Additional notes</td>
+                                <td>Referred by John</td>
+                            </tr>
+                            <tr>
+                                <td><code>tags</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Tags for organization</td>
+                                <td>frontend, remote</td>
+                            </tr>
+                            <tr>
+                                <td><code>next_action</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Next steps</td>
+                                <td>Follow up next week</td>
+                            </tr>
+                            <tr>
+                                <td><code>follow_up_on</code></td>
+                                <td><span class="badge bg-secondary">Optional</span></td>
+                                <td>Follow-up date</td>
+                                <td>2024-01-22</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Template Download -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-download me-2"></i>Sample Template
+                </h6>
+            </div>
+            <div class="card-body">
+                <p>Download a sample Excel template to see the expected format:</p>
+                
+                <button type="button" class="btn btn-outline-primary" onclick="downloadTemplate()">
+                    <i class="bi bi-download me-1"></i>Download Sample Template
+                </button>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        The template includes sample data and proper column headers to help you format your existing data.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Migration Tips -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>Migration Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>From LinkedIn Easy Apply:</h6>
+                        <ul class="small">
+                            <li>Export your application history</li>
+                            <li>Map company names to our format</li>
+                            <li>Include job URLs for tracking</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>From Personal Spreadsheets:</h6>
+                        <ul class="small">
+                            <li>Rename columns to match our format</li>
+                            <li>Standardize status values</li>
+                            <li>Include as much detail as possible</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-success">
+                    <small>
+                        <strong>Pro Tip:</strong> After importing, you can continue using this Job Tracker for new applications 
+                        while keeping your original Excel files as backup.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('importForm');
+        const importBtn = document.getElementById('importBtn');
+        const fileInput = document.getElementById('file');
+        
+        form.addEventListener('submit', function(e) {
+            const file = fileInput.files[0];
+            if (!file) {
+                e.preventDefault();
+                alert('Please select a file to import.');
+                return false;
+            }
+            
+            // Check file extension
+            const allowedExtensions = ['.xlsx', '.xls'];
+            const fileName = file.name.toLowerCase();
+            const isValidFile = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!isValidFile) {
+                e.preventDefault();
+                alert('Please select a valid Excel file (.xlsx or .xls).');
+                return false;
+            }
+            
+            // Show loading state
+            importBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Importing...';
+            importBtn.disabled = true;
+        });
+        
+        // File input validation
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // Convert to MB
+                if (fileSize > 10) {
+                    alert('File size should be less than 10MB.');
+                    this.value = '';
+                    return false;
+                }
+            }
+        });
+    });
+    
+    function downloadTemplate() {
+        // Create sample data
+        const sampleData = [
+            {
+                company: 'Google',
+                role: 'Software Engineer',
+                job_id: 'REQ-12345',
+                date_applied: '2024-01-15',
+                status: 'Interview',
+                url: 'https://careers.google.com/jobs/...',
+                platform: 'LinkedIn',
+                location: 'Mountain View, CA',
+                salary: '$120k - $180k',
+                notes: 'Applied through referral',
+                tags: 'big-tech, backend',
+                next_action: 'Prepare for technical interview',
+                follow_up_on: '2024-01-22'
+            },
+            {
+                company: 'Startup Inc',
+                role: 'Frontend Developer',
+                job_id: 'FE-001',
+                date_applied: '2024-01-10',
+                status: 'Applied',
+                url: 'https://startupinc.com/careers/frontend',
+                platform: 'Company Website',
+                location: 'Remote',
+                salary: '$90k - $120k',
+                notes: 'Exciting product, good team',
+                tags: 'startup, remote, react',
+                next_action: 'Wait for response',
+                follow_up_on: '2024-01-17'
+            }
+        ];
+        
+        // Convert to CSV format
+        const headers = Object.keys(sampleData[0]);
+        const csvContent = [
+            headers.join(','),
+            ...sampleData.map(row => 
+                headers.map(header => 
+                    `"${row[header] || ''}"` 
+                ).join(',')
+            )
+        ].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'job_tracker_template.csv');
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}

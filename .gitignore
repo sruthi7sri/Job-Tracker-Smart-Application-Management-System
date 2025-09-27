@@ -1,0 +1,114 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+job-tracker-env/
+venv/
+env/
+ENV/
+
+# Application specific
+data/jobtracker.sqlite3
+data/*.sqlite3
+data/*.xlsx
+data/*.xls
+uploads/*
+!uploads/.gitkeep
+instance/
+
+# Flask
+*.pyc
+flask_session/
+
+# Logs
+*.log
+logs/
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+# Keep workspace-wide settings for better collaboration
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Backup files
+*.bak
+*.orig
+
+# Node modules (if you add any frontend tooling)
+node_modules/
+npm-debug.log*
+
+# Python package files
+*.whl
+
+# Local configuration
+config.local.py
+local_settings.py
+
+# Documentation build
+docs/_build/
+docs/
+
+# macOS
+.AppleDouble
+.LSOverride

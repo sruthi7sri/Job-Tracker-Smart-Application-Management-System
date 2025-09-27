@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Job Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+    </h1>
+    <a href="{{ url_for('add_application') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Add Application
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card stats-card text-center">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ stats.total }}</h3>
+                <p class="card-text small mb-0">Total</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ stats.applied }}</h3>
+                <p class="card-text small mb-0">Applied</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ stats.interview }}</h3>
+                <p class="card-text small mb-0">Interview</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ stats.offer }}</h3>
+                <p class="card-text small mb-0">Offers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); color: #333;">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ stats.rejected }}</h3>
+                <p class="card-text small mb-0">Rejected</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333;">
+            <div class="card-body">
+                <h3 class="card-title mb-1">{{ ((stats.interview + stats.offer) / stats.total * 100) | round(1) if stats.total > 0 else 0 }}%</h3>
+                <p class="card-text small mb-0">Response Rate</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if applications %}
+<!-- Applications Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-table me-2"></i>Recent Applications
+        </h5>
+        <div class="btn-group btn-group-sm">
+            <a href="{{ url_for('export_excel') }}" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Export
+            </a>
+            <a href="{{ url_for('import_excel') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-upload me-1"></i>Import
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Company</th>
+                        <th>Role</th>
+                        <th>Platform</th>
+                        <th>Date Applied</th>
+                        <th>Status</th>
+                        <th>URL</th>
+                        <th>Location</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app.company or 'Unknown' }}</strong>
+                            {% if app.job_id %}
+                                <br><small class="text-muted">ID: {{ app.job_id }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ app.role or 'Unknown Role' }}</td>
+                        <td>
+                            {% if app.platform %}
+                                <span class="badge bg-secondary">{{ app.platform }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if app.date_applied %}
+                                {{ app.date_applied }}
+                            {% endif %}
+                            {% if app.follow_up_on %}
+                                <br><small class="text-warning">
+                                    <i class="bi bi-calendar-event"></i> {{ app.follow_up_on }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm" 
+                                    onchange="updateStatus({{ app.id }}, this.value)"
+                                    style="min-width: 140px;">
+                                <option value="Applied" {% if app.status == 'Applied' %}selected{% endif %}>Applied</option>
+                                <option value="In Progress" {% if app.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Interview Scheduled" {% if app.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                                <option value="Interview Completed" {% if app.status == 'Interview Completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="Technical Round" {% if app.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
+                                <option value="Final Round" {% if app.status == 'Final Round' %}selected{% endif %}>Final Round</option>
+                                <option value="Offer" {% if app.status == 'Offer' %}selected{% endif %}>Offer</option>
+                                <option value="Accepted" {% if app.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="Withdrawn" {% if app.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                <option value="No Response" {% if app.status == 'No Response' %}selected{% endif %}>No Response</option>
+                            </select>
+                        </td>
+                        <td class="url-cell">
+                            {% if app.url %}
+                                <a href="{{ app.url }}" target="_blank" class="text-decoration-none" title="{{ app.url }}">
+                                    <i class="bi bi-link-45deg me-1"></i>View Job
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if app.location %}
+                                <i class="bi bi-geo-alt me-1"></i>{{ app.location }}
+                            {% endif %}
+                            {% if app.salary %}
+                                <br><small class="text-success">
+                                    <i class="bi bi-currency-dollar"></i>{{ app.salary }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td class="notes-cell">
+                            {% if app.notes %}
+                                <span title="{{ app.notes }}">{{ app.notes[:50] }}{% if app.notes|length > 50 %}...{% endif %}</span>
+                            {% endif %}
+                            {% if app.tags %}
+                                <br><small class="text-info">{{ app.tags }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('edit_application', app_id=app.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-danger btn-sm" 
+                                        title="Delete"
+                                        onclick="confirmDelete({{ app.id }}, '{{ app.company }}', '{{ app.role }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+    </div>
+    <h3 class="text-muted mb-3">No Applications Yet</h3>
+    <p class="text-muted mb-4">
+        Start tracking your job applications by adding your first entry or copying a job URL!
+    </p>
+    <div class="d-flex justify-content-center gap-2">
+        <a href="{{ url_for('add_application') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Add Your First Application
+        </a>
+        <a href="{{ url_for('import_excel') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-upload me-1"></i>Import from Excel
+        </a>
+    </div>
+    
+    <div class="alert alert-info mt-4 mx-auto" style="max-width: 600px;">
+        <h6 class="alert-heading">
+            <i class="bi bi-lightbulb me-1"></i>Pro Tip: Clipboard Monitoring
+        </h6>
+        <p class="mb-0">
+            Copy any job URL (LinkedIn, Greenhouse, Lever, etc.) to your clipboard and we'll automatically create a draft for you to review and save!
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this application?</p>
+                <div class="alert alert-warning">
+                    <strong id="deleteCompany"></strong> - <span id="deleteRole"></span>
+                </div>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete Application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let deleteModal;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    });
+    
+    function confirmDelete(appId, company, role) {
+        document.getElementById('deleteCompany').textContent = company;
+        document.getElementById('deleteRole').textContent = role;
+        document.getElementById('deleteForm').action = '/delete/' + appId;
+        deleteModal.show();
+    }
+    
+    // Auto-refresh every 30 seconds to catch new clipboard drafts
+    setInterval(function() {
+        // Only refresh if no modal is open
+        if (!document.querySelector('.modal.show')) {
+            window.location.reload();
+        }
+    }, 30000);
+</script>
+{% endblock %}
