@@ -166,11 +166,6 @@ Use the dashboard to:
 
 *Automatic draft creation when you copy job URLs - just review and save!*
 
-## Add Application
-![Form with auto-filled fields from clipboard monitoring]
-
-*Screenshots coming soon - add actual images to showcase the interface*
-
 ## Tech Stack
 
 **Backend:**
