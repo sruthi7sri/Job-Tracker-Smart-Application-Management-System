@@ -36,12 +36,14 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 
 # Configuration
-DATABASE_PATH = 'data/jobtracker.sqlite3'
+DATABASE_PATH = os.environ.get("DATABASE_PATH", "data/jobtracker.sqlite3")
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
 # Ensure directories exist
-os.makedirs('data', exist_ok=True)
+db_dir = os.path.dirname(DATABASE_PATH)
+if db_dir:
+    os.makedirs(db_dir, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -578,12 +580,36 @@ def analytics():
     """Analytics page with visualizations."""
     applications = job_tracker.get_all_applications()
     
+    # Custom range support
+    def _parse_date(value):
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, '%Y-%m-%d').date()
+        except ValueError:
+            return None
+
+    today_date = datetime.now().date()
+    default_start = today_date - timedelta(days=29)
+    start_param = request.args.get('start')
+    end_param = request.args.get('end')
+    start_date = _parse_date(start_param) or default_start
+    end_date = _parse_date(end_param) or today_date
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+
     if not applications:
         # Return empty analytics for no applications
         stats = {'total': 0, 'response_rate': 0, 'interview_rate': 0, 'success_rate': 0}
         flow_data = {'no_response': 0, 'rejected_early': 0, 'interviews': 0, 'no_offer': 0, 'offers': 0, 'declined': 0, 'accepted': 0}
+        total_days = (end_date - start_date).days + 1
+        timeline_dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(total_days)]
+        timeline_counts = [0] * total_days
         return render_template('analytics.html', stats=stats, flow_data=flow_data, insights=[], follow_ups=[],
-                             platform_names=[], platform_counts=[], timeline_dates=[], timeline_counts=[])
+                             platform_names=[], platform_counts=[], timeline_dates=timeline_dates,
+                             timeline_counts=timeline_counts,
+                             start_date=start_date.strftime('%Y-%m-%d'),
+                             end_date=end_date.strftime('%Y-%m-%d'))
     
     # Calculate comprehensive stats
     total = len(applications)
@@ -631,21 +657,28 @@ def analytics():
     platform_names = list(platform_counts.keys())
     platform_values = list(platform_counts.values())
     
-    # Timeline analysis (applications per month)
+    # Timeline analysis (applications per day - custom range)
     from collections import defaultdict
     timeline_data = defaultdict(int)
     
     for app in applications:
         if app.get('date_applied'):
             try:
-                # Extract year-month from date
-                date_str = app['date_applied'][:7]  # YYYY-MM format
-                timeline_data[date_str] += 1
+                date_str = app['date_applied'][:10]  # YYYY-MM-DD
+                app_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                if start_date <= app_date <= end_date:
+                    timeline_data[date_str] += 1
             except:
                 pass
     
-    timeline_dates = sorted(timeline_data.keys())
-    timeline_counts = [timeline_data[date] for date in timeline_dates]
+    timeline_dates = []
+    timeline_counts = []
+    total_days = (end_date - start_date).days + 1
+    for i in range(total_days):
+        day = start_date + timedelta(days=i)
+        day_str = day.strftime('%Y-%m-%d')
+        timeline_dates.append(day_str)
+        timeline_counts.append(timeline_data.get(day_str, 0))
     
     # Generate insights
     insights = generate_insights(applications, stats)
@@ -668,7 +701,9 @@ def analytics():
                          platform_names=platform_names,
                          platform_counts=platform_values,
                          timeline_dates=timeline_dates,
-                         timeline_counts=timeline_counts)
+                         timeline_counts=timeline_counts,
+                         start_date=start_date.strftime('%Y-%m-%d'),
+                         end_date=end_date.strftime('%Y-%m-%d'))
 
 def generate_insights(applications, stats):
     """Generate smart insights based on application data."""
@@ -860,7 +895,8 @@ if __name__ == '__main__':
     print("🌐 Opening browser at http://127.0.0.1:5001")
     
     try:
-        app.run(debug=True, use_reloader=False, host='127.0.0.1', port=5001)
+        port = int(os.environ.get("PORT", "5001"))
+        app.run(debug=False, use_reloader=False, host="0.0.0.0", port=port)
     except KeyboardInterrupt:
         print("\n👋 Shutting down Job Tracker...")
         stop_clipboard_monitoring = True

@@ -26,23 +26,31 @@ job-tracker-env/
 venv/
 env/
 ENV/
+.venv/
 
-# Application specific
+# Application specific - PRIVATE DATA!
+data/
+data/*
 data/jobtracker.sqlite3
 data/*.sqlite3
 data/*.xlsx
 data/*.xls
+uploads/
 uploads/*
 !uploads/.gitkeep
+
+# Instance folder
 instance/
 
 # Flask
 *.pyc
 flask_session/
+.flaskenv
 
 # Logs
 *.log
 logs/
+log/
 
 # System files
 .DS_Store
@@ -55,10 +63,11 @@ Thumbs.db
 
 # IDE and editor files
 .vscode/settings.json
-.vscode/launch.json
+.vscode/launch.json  
 .vscode/tasks.json
-# Keep workspace-wide settings for better collaboration
-!.vscode/settings.json
+.vscode/*.json
+# Keep only essential workspace settings
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -72,19 +81,16 @@ Thumbs.db
 .cache/
 .pytest_cache/
 
-# Environment variables
+# Environment variables - SECURITY CRITICAL!
 .env
-.env.local
-.env.development
-.env.test
-.env.production
+.env.*
+.envrc
 
 # Coverage reports
 htmlcov/
 .tox/
 .coverage
 .coverage.*
-.cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -93,15 +99,23 @@ coverage.xml
 # Backup files
 *.bak
 *.orig
+*.backup
 
-# Node modules (if you add any frontend tooling)
-node_modules/
-npm-debug.log*
+# Screenshots and large images (keep small ones for README)
+images/
+screenshots/
+*.jpeg
+*.jpg
+*.png
+*.gif
+# Exception for essential README images
+!images/logo.png
+!images/demo.png
 
 # Python package files
 *.whl
 
-# Local configuration
+# Local configuration - SECURITY CRITICAL!
 config.local.py
 local_settings.py
 

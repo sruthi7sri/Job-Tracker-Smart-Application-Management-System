@@ -12,6 +12,30 @@
     </a>
 </div>
 
+<!-- Date Range -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-2 align-items-end" method="get" action="{{ url_for('analytics') }}">
+            <div class="col-md-4">
+                <label for="start" class="form-label mb-1">Start date</label>
+                <input type="date" class="form-control" id="start" name="start" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end" class="form-label mb-1">End date</label>
+                <input type="date" class="form-control" id="end" name="end" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-calendar3 me-1"></i>Apply range
+                </button>
+                <a class="btn btn-outline-secondary w-100" href="{{ url_for('analytics') }}">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
@@ -94,7 +118,7 @@
 <div class="card mb-4">
     <div class="card-header">
         <h6 class="mb-0">
-            <i class="bi bi-graph-up me-2"></i>Application Timeline
+            <i class="bi bi-graph-up me-2"></i>Application Timeline (Daily)
         </h6>
     </div>
     <div class="card-body">
@@ -280,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const timelineLayout = {
         xaxis: { title: 'Date' },
-        yaxis: { title: 'Applications Submitted' },
+        yaxis: { title: 'Applications per Day' },
         margin: { l: 40, r: 20, t: 20, b: 40 }
     };
 
