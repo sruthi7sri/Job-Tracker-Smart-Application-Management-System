@@ -97,6 +97,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% set known_statuses = [
+                        'Applied','In Progress','Interview Scheduled','Interview Completed',
+                        'Online Assessment','Automated Assessment','Technical Round','Final Round',
+                        'Offer','Accepted','Rejected','Withdrawn','No Response'
+                    ] %}
                     {% for app in applications %}
                     <tr>
                         <td>
@@ -113,11 +118,11 @@
                         </td>
                         <td>
                             {% if app.date_applied %}
-                                {{ app.date_applied }}
+                                {{ app.date_applied|fmt_date }}
                             {% endif %}
                             {% if app.follow_up_on %}
                                 <br><small class="text-warning">
-                                    <i class="bi bi-calendar-event"></i> {{ app.follow_up_on }}
+                                    <i class="bi bi-calendar-event"></i> {{ app.follow_up_on|fmt_date }}
                                 </small>
                             {% endif %}
                         </td>
@@ -129,6 +134,8 @@
                                 <option value="In Progress" {% if app.status == 'In Progress' %}selected{% endif %}>In Progress</option>
                                 <option value="Interview Scheduled" {% if app.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
                                 <option value="Interview Completed" {% if app.status == 'Interview Completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="Online Assessment" {% if app.status == 'Online Assessment' %}selected{% endif %}>Online Assessment</option>
+                                <option value="Automated Assessment" {% if app.status == 'Automated Assessment' %}selected{% endif %}>Automated Assessment</option>
                                 <option value="Technical Round" {% if app.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
                                 <option value="Final Round" {% if app.status == 'Final Round' %}selected{% endif %}>Final Round</option>
                                 <option value="Offer" {% if app.status == 'Offer' %}selected{% endif %}>Offer</option>
@@ -136,6 +143,10 @@
                                 <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
                                 <option value="Withdrawn" {% if app.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
                                 <option value="No Response" {% if app.status == 'No Response' %}selected{% endif %}>No Response</option>
+                                {% if app.status not in known_statuses %}
+                                    <option value="{{ app.status }}" selected>{{ app.status }}</option>
+                                {% endif %}
+                                <option value="__custom__">Add custom status...</option>
                             </select>
                         </td>
                         <td class="url-cell">

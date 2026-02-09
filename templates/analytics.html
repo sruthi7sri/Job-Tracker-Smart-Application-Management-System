@@ -169,7 +169,7 @@
                                 <strong>{{ app.company }}</strong><br>
                                 <small class="text-muted">{{ app.role }}</small>
                             </div>
-                            <span class="badge bg-warning">{{ app.follow_up_on }}</span>
+                            <span class="badge bg-warning">{{ app.follow_up_on|fmt_date }}</span>
                         </div>
                     {% endfor %}
                 {% else %}

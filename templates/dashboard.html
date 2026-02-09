@@ -7,21 +7,10 @@
     <h1 class="h2 mb-0">
         <i class="bi bi-speedometer2 me-2"></i>Job Search Dashboard
     </h1>
-    <div class="btn-group">
+    <div>
         <a href="{{ url_for('add_application') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i>Add Application
         </a>
-        <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
-            <span class="visually-hidden">Toggle Dropdown</span>
-        </button>
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{{ url_for('export_excel') }}">
-                <i class="bi bi-download me-2"></i>Export to Excel
-            </a></li>
-            <li><a class="dropdown-item" href="{{ url_for('import_excel') }}">
-                <i class="bi bi-upload me-2"></i>Import from Excel
-            </a></li>
-        </ul>
     </div>
 </div>
 
@@ -36,7 +25,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
             <div class="card-body text-center">
@@ -135,6 +124,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% set known_statuses = [
+                        'Applied','In Progress','Interview Scheduled','Interview Completed',
+                        'Online Assessment','Automated Assessment','Technical Round','Final Round',
+                        'Offer','Accepted','Rejected','Withdrawn','No Response'
+                    ] %}
                     {% for app in applications %}
                     <tr class="application-row" 
                         data-status="{{ app.status|lower }}" 
@@ -162,10 +156,10 @@
                         
                         <td>
                             {% if app.date_applied %}
-                                <div>{{ app.date_applied }}</div>
+                                <div>{{ app.date_applied|fmt_date }}</div>
                                 {% if app.follow_up_on %}
                                     <small class="text-warning">
-                                        <i class="bi bi-calendar-event"></i> {{ app.follow_up_on }}
+                                        <i class="bi bi-calendar-event"></i> {{ app.follow_up_on|fmt_date }}
                                     </small>
                                 {% endif %}
                             {% endif %}
@@ -179,6 +173,8 @@
                                 <option value="In Progress" {% if app.status == 'In Progress' %}selected{% endif %}>In Progress</option>
                                 <option value="Interview Scheduled" {% if app.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
                                 <option value="Interview Completed" {% if app.status == 'Interview Completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="Online Assessment" {% if app.status == 'Online Assessment' %}selected{% endif %}>Online Assessment</option>
+                                <option value="Automated Assessment" {% if app.status == 'Automated Assessment' %}selected{% endif %}>Automated Assessment</option>
                                 <option value="Technical Round" {% if app.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
                                 <option value="Final Round" {% if app.status == 'Final Round' %}selected{% endif %}>Final Round</option>
                                 <option value="Offer" {% if app.status == 'Offer' %}selected{% endif %}>Offer</option>
@@ -186,6 +182,10 @@
                                 <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
                                 <option value="Withdrawn" {% if app.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
                                 <option value="No Response" {% if app.status == 'No Response' %}selected{% endif %}>No Response</option>
+                                {% if app.status not in known_statuses %}
+                                    <option value="{{ app.status }}" selected>{{ app.status }}</option>
+                                {% endif %}
+                                <option value="__custom__">Add custom status...</option>
                             </select>
                         </td>
                         
@@ -360,7 +360,8 @@
                 if (status === 'interview' && (
                     rowStatus.includes('interview') || 
                     rowStatus.includes('technical') || 
-                    rowStatus.includes('final')
+                    rowStatus.includes('final') ||
+                    rowStatus.includes('assessment')
                 )) {
                     row.style.display = '';
                 } else if (status === 'applied' && rowStatus === 'applied') {

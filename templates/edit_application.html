@@ -79,12 +79,19 @@
                                    value="{{ application.date_applied }}">
                         </div>
                         <div class="col-md-4">
+                            {% set known_statuses = [
+                                'Applied','In Progress','Interview Scheduled','Interview Completed',
+                                'Online Assessment','Automated Assessment','Technical Round','Final Round',
+                                'Offer','Accepted','Rejected','Withdrawn','No Response'
+                            ] %}
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="Applied" {% if application.status == 'Applied' %}selected{% endif %}>Applied</option>
                                 <option value="In Progress" {% if application.status == 'In Progress' %}selected{% endif %}>In Progress</option>
                                 <option value="Interview Scheduled" {% if application.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
                                 <option value="Interview Completed" {% if application.status == 'Interview Completed' %}selected{% endif %}>Interview Completed</option>
+                                <option value="Online Assessment" {% if application.status == 'Online Assessment' %}selected{% endif %}>Online Assessment</option>
+                                <option value="Automated Assessment" {% if application.status == 'Automated Assessment' %}selected{% endif %}>Automated Assessment</option>
                                 <option value="Technical Round" {% if application.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
                                 <option value="Final Round" {% if application.status == 'Final Round' %}selected{% endif %}>Final Round</option>
                                 <option value="Offer" {% if application.status == 'Offer' %}selected{% endif %}>Offer</option>
@@ -92,7 +99,14 @@
                                 <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
                                 <option value="Withdrawn" {% if application.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
                                 <option value="No Response" {% if application.status == 'No Response' %}selected{% endif %}>No Response</option>
+                                <option value="__custom__" {% if application.status not in known_statuses %}selected{% endif %}>Add custom status...</option>
                             </select>
+                        </div>
+                        <div class="col-12 mt-2" id="customStatusRow" style="display: none;">
+                            <label for="custom_status" class="form-label">Custom Status</label>
+                            <input type="text" class="form-control" id="custom_status" placeholder="e.g., Recruiter Screen"
+                                   value="{% if application.status not in known_statuses %}{{ application.status }}{% endif %}">
+                            <div class="form-text">Use this if none of the predefined statuses fit.</div>
                         </div>
                     </div>
 
@@ -190,14 +204,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Form validation
         const form = document.getElementById('applicationForm');
+        const statusSelect = document.getElementById('status');
+        const customStatusRow = document.getElementById('customStatusRow');
+        const customStatusInput = document.getElementById('custom_status');
+
+        function toggleCustomStatus() {
+            const isCustom = statusSelect.value === '__custom__';
+            customStatusRow.style.display = isCustom ? 'block' : 'none';
+        }
+
+        statusSelect.addEventListener('change', toggleCustomStatus);
+        toggleCustomStatus();
+
         form.addEventListener('submit', function(e) {
             const company = document.getElementById('company').value.trim();
             const role = document.getElementById('role').value.trim();
+            const isCustom = statusSelect.value === '__custom__';
             
             if (!company || !role) {
                 e.preventDefault();
                 alert('Please fill in both Company and Role fields.');
                 return false;
+            }
+
+            if (isCustom) {
+                const custom = customStatusInput.value.trim();
+                if (!custom) {
+                    e.preventDefault();
+                    alert('Please enter a custom status.');
+                    return false;
+                }
+                let option = Array.from(statusSelect.options).find(o => o.value === custom);
+                if (!option) {
+                    option = document.createElement('option');
+                    option.value = custom;
+                    option.textContent = custom;
+                    statusSelect.appendChild(option);
+                }
+                statusSelect.value = custom;
             }
         });
     });

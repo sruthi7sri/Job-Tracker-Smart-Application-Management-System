@@ -35,6 +35,16 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 
+@app.template_filter('fmt_date')
+def fmt_date(value):
+    if not value:
+        return ''
+    date_str = str(value)[:10]
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').strftime('%d %b %Y')
+    except ValueError:
+        return value
+
 # Configuration
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "data/jobtracker.sqlite3")
 UPLOAD_FOLDER = 'uploads'
@@ -90,7 +100,7 @@ class JobTracker:
         
         conn.commit()
         conn.close()
-    
+
     def get_connection(self):
         """Get database connection."""
         conn = sqlite3.connect(self.db_path)
@@ -330,6 +340,13 @@ def clipboard_monitor():
 # Initialize job tracker
 job_tracker = JobTracker()
 
+def is_interview_status(status):
+    if not status:
+        return False
+    status_lower = status.lower()
+    keywords = ['interview', 'technical', 'final', 'assessment']
+    return any(keyword in status_lower for keyword in keywords)
+
 def extract_job_info_from_url(url):
     """Extract job information from URL patterns and optionally web scraping."""
     parsed_url = urlparse(url)
@@ -568,7 +585,7 @@ def index():
     stats = {
         'total': len(applications),
         'applied': len([a for a in applications if a['status'] == 'Applied']),
-        'interview': len([a for a in applications if 'Interview' in a['status'] or 'Technical' in a['status'] or 'Final' in a['status']]),
+        'interview': len([a for a in applications if is_interview_status(a['status'])]),
         'offer': len([a for a in applications if a['status'] in ['Offer', 'Accepted']]),
         'rejected': len([a for a in applications if a['status'] in ['Rejected', 'No Response']])
     }
@@ -614,7 +631,7 @@ def analytics():
     # Calculate comprehensive stats
     total = len(applications)
     applied = len([a for a in applications if a['status'] == 'Applied'])
-    interviews = len([a for a in applications if 'Interview' in a['status'] or 'Technical' in a['status'] or 'Final' in a['status']])
+    interviews = len([a for a in applications if is_interview_status(a['status'])])
     offers = len([a for a in applications if a['status'] in ['Offer', 'Accepted']])
     rejected = len([a for a in applications if a['status'] == 'Rejected'])
     no_response = len([a for a in applications if a['status'] == 'No Response'])
@@ -641,7 +658,7 @@ def analytics():
         'no_response': no_response,
         'rejected_early': rejected,
         'interviews': interviews,
-        'no_offer': len([a for a in applications if 'Interview' in a['status'] and a['status'] not in ['Offer', 'Accepted']]),
+        'no_offer': len([a for a in applications if is_interview_status(a['status']) and a['status'] not in ['Offer', 'Accepted']]),
         'offers': offers,
         'declined': len([a for a in applications if a['status'] == 'Declined']),
         'accepted': len([a for a in applications if a['status'] == 'Accepted'])
